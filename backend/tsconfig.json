@@ -26,7 +26,8 @@
   },
   "include": [
     "src/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    "serverless.ts",
   ],
   "exclude": [
     "node_modules",
