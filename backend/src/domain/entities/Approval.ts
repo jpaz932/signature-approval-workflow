@@ -76,4 +76,15 @@ export class Approval {
             throw new Error('Invalid or expired OTP');
         }
     }
+
+    /**
+     * Gets the OTP code and its expiration date.
+     * @returns An object containing the OTP code and its expiration date.
+     */
+    public getOtp(): { code: string; expiresAt: Date } {
+        return {
+            code: this.otp.getCode(),
+            expiresAt: this.otp.getExpiresAt(),
+        };
+    }
 }

@@ -17,6 +17,17 @@ export class Otp {
     }
 
     /**
+     * Reconstructs a previously generated OTP from persisted values, without generating a
+     * new code. Used by repository adapters when loading a purchase request back from
+     * storage, so the same OTP that was issued to the approver survives the round trip.
+     * @param code The previously generated OTP code.
+     * @param expiresAt The previously computed expiration date.
+     */
+    public static rehydrate(code: string, expiresAt: Date): Otp {
+        return new Otp(code, expiresAt);
+    }
+
+    /**
      * Checks whether the given code matches and the OTP has not expired.
      * @param code The OTP code to validate.
      * @returns True if the code matches and the OTP has not expired, false otherwise.

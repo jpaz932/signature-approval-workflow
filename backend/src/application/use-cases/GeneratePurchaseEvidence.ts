@@ -1,8 +1,9 @@
 import { PurchaseRequest } from '../../domain/entities/PurchaseRequest';
-import { EvidencePdfData, PdfGenerator } from '../ports/PdfGenerator';
+import { PdfGenerator } from '../ports/PdfGenerator';
 import { EvidenceStorage } from '../ports/EvidenceStorage';
 import { PurchaseRequestRepository } from '../ports/PurchaseRequestRepository';
 import { GeneratePurchaseEvidenceInput } from './inputs/GeneratePurchaseEvidenceInput';
+import { EvidencePdfData } from '../types/pdfGenerator';
 
 export class GeneratePurchaseEvidenceUseCase {
     constructor(

@@ -161,4 +161,28 @@ describe('Approval', () => {
             );
         });
     });
+
+    describe('getOtp', () => {
+        it('should return the OTP code and expiration date', () => {
+            const expiresAt = new Date(Date.now() + 60_000);
+            const otp = Otp.rehydrate('123456', expiresAt);
+            const approval = new Approval(
+                'approval-1',
+                'request-1',
+                'token-1',
+                'approver@example.com',
+                'MANAGER',
+                'Juan Pérez',
+                otp,
+                ApprovalStatus.PENDING,
+                null,
+                null,
+            );
+
+            expect(approval.getOtp()).toEqual({
+                code: '123456',
+                expiresAt,
+            });
+        });
+    });
 });

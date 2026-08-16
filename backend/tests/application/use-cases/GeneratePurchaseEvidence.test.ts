@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/require-await */
 import { Approval } from '../../../src/domain/entities/Approval';
 import { PurchaseRequest } from '../../../src/domain/entities/PurchaseRequest';
-import {
-    EvidencePdfData,
-    PdfGenerator,
-} from '../../../src/application/ports/PdfGenerator';
+import { PdfGenerator } from '../../../src/application/ports/PdfGenerator';
 import { EvidenceStorage } from '../../../src/application/ports/EvidenceStorage';
 import { PurchaseRequestRepository } from '../../../src/application/ports/PurchaseRequestRepository';
 import { GeneratePurchaseEvidenceUseCase } from '../../../src/application/use-cases/GeneratePurchaseEvidence';
 import { Otp } from '../../../src/domain/value-objects/Otp';
+import { EvidencePdfData } from '../../../src/application/types/pdfGenerator';
 
 class FakePurchaseRequestRepository implements PurchaseRequestRepository {
     private requests: PurchaseRequest[] = [];

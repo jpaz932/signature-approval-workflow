@@ -67,4 +67,22 @@ describe('Otp', () => {
             expect(otp).toBeDefined();
         });
     });
+
+    describe('rehydrate', () => {
+        it('should reconstruct an OTP that validates the given code before its expiry', () => {
+            const expiresAt = new Date(Date.now() + 60_000);
+            const otp = Otp.rehydrate('123456', expiresAt);
+
+            expect(otp.isValid('123456')).toBe(true);
+            expect(otp.getCode()).toBe('123456');
+            expect(otp.getExpiresAt()).toEqual(expiresAt);
+        });
+
+        it('should reconstruct an OTP that is already expired', () => {
+            const expiresAt = new Date(Date.now() - 1000);
+            const otp = Otp.rehydrate('123456', expiresAt);
+
+            expect(otp.isValid('123456')).toBe(false);
+        });
+    });
 });

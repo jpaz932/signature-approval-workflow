@@ -2,16 +2,14 @@
 import { Approval } from '../../../src/domain/entities/Approval';
 import { PurchaseRequest } from '../../../src/domain/entities/PurchaseRequest';
 import { PurchaseRequestStatus } from '../../../src/domain/entities/types/requester';
-import {
-    EvidencePdfData,
-    PdfGenerator,
-} from '../../../src/application/ports/PdfGenerator';
+import { PdfGenerator } from '../../../src/application/ports/PdfGenerator';
 import { EvidenceStorage } from '../../../src/application/ports/EvidenceStorage';
 import { PurchaseRequestRepository } from '../../../src/application/ports/PurchaseRequestRepository';
 import { GeneratePurchaseEvidenceUseCase } from '../../../src/application/use-cases/GeneratePurchaseEvidence';
 import { SignApprovalInput } from '../../../src/application/use-cases/inputs/SignApprovalInput';
 import { SignApprovalUseCase } from '../../../src/application/use-cases/SignApproval';
 import { Otp } from '../../../src/domain/value-objects/Otp';
+import { EvidencePdfData } from '../../../src/application/types/pdfGenerator';
 
 class FakePurchaseRequestRepository implements PurchaseRequestRepository {
     private requests: PurchaseRequest[] = [];
