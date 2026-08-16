@@ -15,7 +15,6 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "type": "module",
     "dependencies": {
         "typescript": "6.0.3",
         "uuid": "14.0.1",

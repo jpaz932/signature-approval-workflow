@@ -4,10 +4,7 @@ const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     roots: ['<rootDir>/tests'],
-    collectCoverageFrom: [
-        'src/**/*.ts',
-        '!src/**/*.d.ts',
-    ],
+    collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
 };
 
 export default config;
