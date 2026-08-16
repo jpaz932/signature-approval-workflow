@@ -14,6 +14,7 @@ export class PurchaseRequest {
         public readonly createdAt: Date,
         private readonly approvals: Approval[],
         private status: PurchaseRequestStatus = PurchaseRequestStatus.PENDING,
+        private evidenceKey: string | null = null,
     ) {
         this.validateApprovals();
     }
@@ -72,7 +73,9 @@ export class PurchaseRequest {
     }
 
     /**
-     * Signs an approval for the purchase request.
+     * Signs an approval for the purchase request. The request itself is only marked
+     * "Completada" once its evidence PDF is generated and attached via `attachEvidence`,
+     * even after the third and last approval has been signed here.
      * @param approvalId The ID of the approval to sign.
      */
     public signApproval(approvalId: string) {
@@ -80,14 +83,16 @@ export class PurchaseRequest {
 
         const approval = this.getApproval(approvalId);
         approval.sign();
+    }
 
-        const allSigned = this.approvals.every(
+    /**
+     * Checks whether every approval associated with the purchase request has been signed.
+     * @returns True if all approvals are signed, false otherwise.
+     */
+    public allApprovalsSigned(): boolean {
+        return this.approvals.every(
             (approval) => approval.getStatus().status === ApprovalStatus.SIGNED,
         );
-
-        if (allSigned) {
-            this.status = PurchaseRequestStatus.COMPLETED;
-        }
     }
 
     /**
@@ -101,6 +106,35 @@ export class PurchaseRequest {
         approval.reject();
 
         this.status = PurchaseRequestStatus.REJECTED;
+    }
+
+    /**
+     * Gets the storage key of the generated evidence PDF, if any.
+     * @returns The evidence key, or null if the evidence PDF has not been generated yet.
+     */
+    public getEvidenceKey(): string | null {
+        return this.evidenceKey;
+    }
+
+    /**
+     * Attaches the storage key of the generated evidence PDF and completes the purchase
+     * request. Per the spec, the request only becomes "Completada" once its evidence PDF
+     * has actually been generated — not merely once the third approval is signed.
+     * @param key The storage key of the generated evidence PDF.
+     * @throws {Error} If the purchase request is not pending or not every approval has
+     * been signed yet.
+     */
+    public attachEvidence(key: string): void {
+        if (
+            this.status !== PurchaseRequestStatus.PENDING ||
+            !this.allApprovalsSigned()
+        ) {
+            throw new Error(
+                'Evidence can only be attached once all approvals have been signed',
+            );
+        }
+        this.evidenceKey = key;
+        this.status = PurchaseRequestStatus.COMPLETED;
     }
 
     /**

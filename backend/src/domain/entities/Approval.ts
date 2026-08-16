@@ -9,10 +9,10 @@ export class Approval {
         public readonly email: string,
         public readonly role: string,
         public readonly name: string,
+        private readonly otp: Otp,
         private status: ApprovalStatus = ApprovalStatus.PENDING,
         private signedAt: Date | null = null,
         private rejectedAt: Date | null = null,
-        private readonly otp: Otp,
     ) {}
 
     /**

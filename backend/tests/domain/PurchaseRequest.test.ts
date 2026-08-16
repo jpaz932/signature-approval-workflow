@@ -13,10 +13,10 @@ describe('PurchaseRequest', () => {
             `${id}@example.com`,
             role,
             `Approver ${id}`,
+            Otp.generate(),
             ApprovalStatus.PENDING,
             null,
             null,
-            Otp.generate(),
         );
     };
 
@@ -138,14 +138,15 @@ describe('PurchaseRequest', () => {
             expect(request.getStatus()).toBe(PurchaseRequestStatus.PENDING);
         });
 
-        it('should be completed when all three approvals are signed', () => {
+        it('should report all approvals signed once the third one is signed, but stay pending until the evidence is attached', () => {
             const request = createPurchaseRequest();
 
             request.signApproval('approval-1');
             request.signApproval('approval-2');
             request.signApproval('approval-3');
 
-            expect(request.getStatus()).toBe(PurchaseRequestStatus.COMPLETED);
+            expect(request.allApprovalsSigned()).toBe(true);
+            expect(request.getStatus()).toBe(PurchaseRequestStatus.PENDING);
         });
 
         it('should throw when trying to sign a non-existing approval', () => {
@@ -232,6 +233,7 @@ describe('PurchaseRequest', () => {
             request.signApproval('approval-1');
             request.signApproval('approval-2');
             request.signApproval('approval-3');
+            request.attachEvidence('evidence/request-1.pdf');
 
             expect(() => request.signApproval('approval-1')).toThrow(
                 'Only pending purchase requests can be modified',
@@ -244,9 +246,54 @@ describe('PurchaseRequest', () => {
             request.signApproval('approval-1');
             request.signApproval('approval-2');
             request.signApproval('approval-3');
+            request.attachEvidence('evidence/request-1.pdf');
 
             expect(() => request.rejectApproval('approval-1')).toThrow(
                 'Only pending purchase requests can be modified',
+            );
+        });
+    });
+
+    describe('attachEvidence', () => {
+        it('should have no evidence key by default', () => {
+            const request = createPurchaseRequest();
+
+            expect(request.getEvidenceKey()).toBeNull();
+        });
+
+        it('should attach the evidence key and complete the request once all approvals are signed', () => {
+            const request = createPurchaseRequest();
+
+            request.signApproval('approval-1');
+            request.signApproval('approval-2');
+            request.signApproval('approval-3');
+            request.attachEvidence('evidence/request-1.pdf');
+
+            expect(request.getEvidenceKey()).toBe('evidence/request-1.pdf');
+            expect(request.getStatus()).toBe(PurchaseRequestStatus.COMPLETED);
+        });
+
+        it('should not allow attaching evidence when not all approvals are signed yet', () => {
+            const request = createPurchaseRequest();
+
+            request.signApproval('approval-1');
+
+            expect(() =>
+                request.attachEvidence('evidence/request-1.pdf'),
+            ).toThrow(
+                'Evidence can only be attached once all approvals have been signed',
+            );
+        });
+
+        it('should not allow attaching evidence to a rejected request', () => {
+            const request = createPurchaseRequest();
+
+            request.rejectApproval('approval-1');
+
+            expect(() =>
+                request.attachEvidence('evidence/request-1.pdf'),
+            ).toThrow(
+                'Evidence can only be attached once all approvals have been signed',
             );
         });
     });

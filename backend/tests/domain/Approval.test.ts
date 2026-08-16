@@ -11,10 +11,10 @@ describe('Approval', () => {
             'approver@example.com',
             'MANAGER',
             'Juan Pérez',
+            Otp.generate(),
             ApprovalStatus.PENDING,
             null,
             null,
-            Otp.generate(),
         );
     };
 
@@ -125,10 +125,10 @@ describe('Approval', () => {
                 'approver@example.com',
                 'MANAGER',
                 'Juan Pérez',
+                otp,
                 ApprovalStatus.PENDING,
                 null,
                 null,
-                otp,
             );
 
             // Wait for OTP to expire
@@ -149,10 +149,10 @@ describe('Approval', () => {
                 'approver@example.com',
                 'MANAGER',
                 'Juan Pérez',
+                otp,
                 ApprovalStatus.PENDING,
                 null,
                 null,
-                otp,
             );
 
             // Test that invalid code throws

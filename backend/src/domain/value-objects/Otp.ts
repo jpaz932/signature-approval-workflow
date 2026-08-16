@@ -24,4 +24,20 @@ export class Otp {
     public isValid(code: string): boolean {
         return this.code === code && new Date() < this.expiresAt;
     }
+
+    /**
+     * Gets the OTP code.
+     * @returns The OTP code.
+     */
+    public getCode(): string {
+        return this.code;
+    }
+
+    /**
+     * Gets the expiration date of the OTP.
+     * @returns The expiration date of the OTP.
+     */
+    public getExpiresAt(): Date {
+        return this.expiresAt;
+    }
 }
