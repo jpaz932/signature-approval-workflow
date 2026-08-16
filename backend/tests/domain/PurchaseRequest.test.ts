@@ -2,15 +2,21 @@ import { Approval } from '../../src/domain/entities/Approval';
 import { PurchaseRequest } from '../../src/domain/entities/PurchaseRequest';
 import { ApprovalStatus } from '../../src/domain/entities/types/approval';
 import { PurchaseRequestStatus } from '../../src/domain/entities/types/requester';
+import { Otp } from '../../src/domain/value-objects/Otp';
 
 describe('PurchaseRequest', () => {
     const createApproval = (id: string, role: string): Approval => {
         return new Approval(
             id,
             'request-1',
+            `token-${id}`,
             `${id}@example.com`,
             role,
             `Approver ${id}`,
+            ApprovalStatus.PENDING,
+            null,
+            null,
+            Otp.generate(),
         );
     };
 

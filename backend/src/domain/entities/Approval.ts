@@ -1,15 +1,18 @@
 import { ApprovalStatus } from './types/approval';
+import { Otp } from '../value-objects/Otp';
 
 export class Approval {
     constructor(
         public readonly id: string,
         public readonly requestId: string,
+        public readonly token: string,
         public readonly email: string,
         public readonly role: string,
         public readonly name: string,
         private status: ApprovalStatus = ApprovalStatus.PENDING,
         private signedAt: Date | null = null,
         private rejectedAt: Date | null = null,
+        private readonly otp: Otp,
     ) {}
 
     /**
@@ -61,5 +64,16 @@ export class Approval {
      */
     public getRole() {
         return this.role;
+    }
+
+    /**
+     * Validates the provided OTP code against the stored OTP for this approval.
+     * @param code The OTP code to validate.
+     * @throws {Error} If the OTP is invalid or has expired.
+     */
+    public validateOtp(code: string) {
+        if (!this.otp.isValid(code)) {
+            throw new Error('Invalid or expired OTP');
+        }
     }
 }

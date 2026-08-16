@@ -1,14 +1,20 @@
 import { Approval } from '../../src/domain/entities/Approval';
 import { ApprovalStatus } from '../../src/domain/entities/types/approval';
+import { Otp } from '../../src/domain/value-objects/Otp';
 
 describe('Approval', () => {
     const createApproval = (): Approval => {
         return new Approval(
             'approval-1',
             'request-1',
+            'token-1',
             'approver@example.com',
             'MANAGER',
             'Juan Pérez',
+            ApprovalStatus.PENDING,
+            null,
+            null,
+            Otp.generate(),
         );
     };
 
@@ -94,6 +100,64 @@ describe('Approval', () => {
 
             expect(() => approval.reject()).toThrow(
                 'Only pending approvals can be signed or rejected',
+            );
+        });
+    });
+
+    describe('validateOtp', () => {
+        it('should not throw when validating with an invalid code', () => {
+            const approval = createApproval();
+
+            // The OTP code is randomly generated, so we can't match it
+            // This test verifies that an invalid code throws an error
+            expect(() => approval.validateOtp('000000')).toThrow(
+                'Invalid or expired OTP',
+            );
+        });
+
+        it('should throw an error for an expired OTP', async () => {
+            // Create an OTP with very short TTL (1 second)
+            const otp = Otp.generate(1 / 60);
+            const approval = new Approval(
+                'approval-1',
+                'request-1',
+                'token-1',
+                'approver@example.com',
+                'MANAGER',
+                'Juan Pérez',
+                ApprovalStatus.PENDING,
+                null,
+                null,
+                otp,
+            );
+
+            // Wait for OTP to expire
+            await new Promise((resolve) => setTimeout(resolve, 1100));
+
+            // Any code should now be invalid
+            expect(() => approval.validateOtp('123456')).toThrow(
+                'Invalid or expired OTP',
+            );
+        });
+
+        it('should throw for an invalid OTP code', () => {
+            const otp = Otp.generate();
+            const approval = new Approval(
+                'approval-1',
+                'request-1',
+                'token-1',
+                'approver@example.com',
+                'MANAGER',
+                'Juan Pérez',
+                ApprovalStatus.PENDING,
+                null,
+                null,
+                otp,
+            );
+
+            // Test that invalid code throws
+            expect(() => approval.validateOtp('invalid')).toThrow(
+                'Invalid or expired OTP',
             );
         });
     });
