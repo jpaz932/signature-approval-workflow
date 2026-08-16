@@ -117,9 +117,7 @@ export class PurchaseRequest {
     }
 
     /**
-     * Attaches the storage key of the generated evidence PDF and completes the purchase
-     * request. Per the spec, the request only becomes "Completada" once its evidence PDF
-     * has actually been generated — not merely once the third approval is signed.
+     * Attaches the storage key of the generated evidence PDF and completes the purchase request.
      * @param key The storage key of the generated evidence PDF.
      * @throws {Error} If the purchase request is not pending or not every approval has
      * been signed yet.
