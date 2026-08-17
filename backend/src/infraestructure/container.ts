@@ -7,6 +7,7 @@ import { ListMockMailUseCase } from '../application/use-cases/ListMockMail';
 import { ListPurchaseRequestsUseCase } from '../application/use-cases/ListPurchaseRequests';
 import { RejectApprovalUseCase } from '../application/use-cases/RejectApproval';
 import { SignApprovalUseCase } from '../application/use-cases/SignApproval';
+import { VerifyApprovalOtpUseCase } from '../application/use-cases/VerifyApprovalOtp';
 import { envs } from './config/envs';
 import { MockNotificationService } from './notifications/MockNotificationService';
 import { PdfKitEvidenceGenerator } from './pdf/PdfKitEvidenceGenerator';
@@ -20,6 +21,7 @@ export interface Dependencies {
     getPurchaseRequest: GetPurchaseRequestUseCase;
     getEvidencePdf: GetEvidencePdfUseCase;
     getApproval: GetApprovalUseCase;
+    verifyApprovalOtp: VerifyApprovalOtpUseCase;
     signApproval: SignApprovalUseCase;
     rejectApproval: RejectApprovalUseCase;
     listMockMail: ListMockMailUseCase;
@@ -61,6 +63,7 @@ export function createDependencies(): Dependencies {
         getPurchaseRequest: new GetPurchaseRequestUseCase(repository),
         getEvidencePdf: new GetEvidencePdfUseCase(repository, evidenceStorage),
         getApproval: new GetApprovalUseCase(repository),
+        verifyApprovalOtp: new VerifyApprovalOtpUseCase(repository),
         signApproval: new SignApprovalUseCase(
             repository,
             generatePurchaseEvidence,

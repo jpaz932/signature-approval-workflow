@@ -1,5 +1,5 @@
 import { createDependencies } from '../infraestructure/container';
-import { toApprovalViewDto } from './dto/approvalView.dto';
+import { toApprovalSummaryDto } from './dto/approvalSummary.dto';
 import { jsonResponse, parsePathParams, withHttpErrorHandling } from './http';
 import { approvalParamsSchema } from './schemas/pathParamsSchemas';
 
@@ -13,5 +13,5 @@ export const handler = withHttpErrorHandling(async (event) => {
         token,
     });
 
-    return jsonResponse(200, toApprovalViewDto(request, approval));
+    return jsonResponse(200, toApprovalSummaryDto(request, approval));
 });

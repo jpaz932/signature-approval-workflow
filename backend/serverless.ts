@@ -106,6 +106,17 @@ const serverlessConfiguration: AWS = {
                 },
             ],
         },
+        verifyApprovalOtp: {
+            handler: 'src/handlers/verify-approval-otp.handler',
+            events: [
+                {
+                    httpApi: {
+                        path: '/api/approvals/{id}/{token}/verify-otp',
+                        method: 'POST',
+                    },
+                },
+            ],
+        },
         signApproval: {
             handler: 'src/handlers/sign-approval.handler',
             events: [
