@@ -14,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
                     <nav className="nav">
                         <NavLink
                             to="/solicitudes"
+                            end
                             className={({ isActive }) =>
                                 isActive ? 'active' : undefined
                             }

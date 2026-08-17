@@ -12,10 +12,13 @@
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\" \"packages/*/tests/**/*.{ts,tsx}\"",
-        "start:shell": "npm run start --workspace=shell"
+        "start:shell": "npm run start --workspace=shell",
+        "start:requester-app": "npm run start --workspace=requester-app",
+        "dev": "concurrently -n shell,requester-app -c blue,green \"npm:start:shell\" \"npm:start:requester-app\""
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
+        "concurrently": "10.0.5",
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "16.3.0",
         "@types/jest": "30.0.0",
@@ -23,6 +26,7 @@
         "@types/react": "19.2.18",
         "@types/react-dom": "19.2.4",
         "css-loader": "7.1.4",
+        "dotenv": "17.4.2",
         "eslint": "10.8.1",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-prettier": "5.5.6",
