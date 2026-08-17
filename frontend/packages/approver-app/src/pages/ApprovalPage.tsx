@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import OtpInput from 'react-otp-input';
 import {
     APPROVAL_STATUS_BADGE_CLASS,
     APPROVAL_STATUS_LABEL,
@@ -19,6 +20,8 @@ import type {
     ApprovalSummary,
     ApprovalView,
 } from '@app/shared';
+
+const OTP_LENGTH = 6;
 
 function approvalTimestamp(approval: ApprovalDetail): string | null {
     return approval.signedAt ?? approval.rejectedAt;
@@ -298,13 +301,22 @@ export function ApprovalPage() {
             </p>
 
             <div className="field">
-                <label htmlFor="code">Código de verificación</label>
-                <input
-                    id="code"
-                    className="input"
+                <label>Código de verificación</label>
+                <OtpInput
                     value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    required
+                    onChange={setCode}
+                    numInputs={OTP_LENGTH}
+                    shouldAutoFocus
+                    inputType="tel"
+                    skipDefaultStyles
+                    containerStyle="otp-input-container"
+                    renderInput={(props, index) => (
+                        <input
+                            {...props}
+                            aria-label={`Código de verificación, dígito ${index + 1}`}
+                            className="input otp-digit"
+                        />
+                    )}
                 />
             </div>
 
@@ -317,7 +329,7 @@ export function ApprovalPage() {
             <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={verifying}
+                disabled={verifying || code.length !== OTP_LENGTH}
             >
                 {verifying ? 'Verificando...' : 'Verificar código'}
             </button>

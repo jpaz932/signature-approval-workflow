@@ -281,6 +281,17 @@ a {
     outline-offset: -1px;
 }
 
+.otp-input-container {
+    gap: var(--space-2);
+}
+
+.otp-digit {
+    width: 2.5em;
+    height: 2.75em;
+    text-align: center;
+    font-size: 1.25rem;
+}
+
 .approver-list {
     display: flex;
     flex-direction: column;

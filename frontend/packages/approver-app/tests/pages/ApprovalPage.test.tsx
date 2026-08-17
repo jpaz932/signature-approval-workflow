@@ -87,14 +87,22 @@ function renderPage(query = 'solicitud_id=req-1&approver_token=tok-1') {
     );
 }
 
+/** Types one code into the 6 individual OTP digit boxes rendered by react-otp-input. */
+async function typeOtpCode(code: string) {
+    const digits = await screen.findAllByLabelText(
+        /Código de verificación, dígito \d/,
+    );
+    code.split('').forEach((digit, index) => {
+        fireEvent.change(digits[index], { target: { value: digit } });
+    });
+}
+
 async function reachVerifiedDetail(detail: ApprovalView = verifiedDetail) {
     mockGetApprovalSummary.mockResolvedValueOnce(pendingSummary);
     mockVerifyApprovalOtp.mockResolvedValueOnce(detail);
 
     renderPage();
-    fireEvent.change(await screen.findByLabelText('Código de verificación'), {
-        target: { value: '123456' },
-    });
+    await typeOtpCode('123456');
     fireEvent.click(screen.getByRole('button', { name: 'Verificar código' }));
 
     await screen.findByText(detail.description);
@@ -126,8 +134,8 @@ describe('ApprovalPage', () => {
         expect(mockGetApprovalSummary).toHaveBeenCalledWith('req-1', 'tok-1');
         expect(screen.getByText(/Ana Gómez/)).toBeInTheDocument();
         expect(
-            screen.getByLabelText('Código de verificación'),
-        ).toBeInTheDocument();
+            screen.getAllByLabelText(/Código de verificación, dígito \d/),
+        ).toHaveLength(6);
     });
 
     it('shows the backend error message when loading the summary fails', async () => {
@@ -150,7 +158,7 @@ describe('ApprovalPage', () => {
             await screen.findByText('Esta aprobación ya no está pendiente.'),
         ).toBeInTheDocument();
         expect(
-            screen.queryByLabelText('Código de verificación'),
+            screen.queryByLabelText(/Código de verificación, dígito \d/),
         ).not.toBeInTheDocument();
     });
 
@@ -159,12 +167,7 @@ describe('ApprovalPage', () => {
         mockVerifyApprovalOtp.mockResolvedValueOnce(verifiedDetail);
 
         renderPage();
-        fireEvent.change(
-            await screen.findByLabelText('Código de verificación'),
-            {
-                target: { value: '123456' },
-            },
-        );
+        await typeOtpCode('123456');
         fireEvent.click(
             screen.getByRole('button', { name: 'Verificar código' }),
         );
@@ -188,12 +191,7 @@ describe('ApprovalPage', () => {
         );
 
         renderPage();
-        fireEvent.change(
-            await screen.findByLabelText('Código de verificación'),
-            {
-                target: { value: '000000' },
-            },
-        );
+        await typeOtpCode('000000');
         fireEvent.click(
             screen.getByRole('button', { name: 'Verificar código' }),
         );
