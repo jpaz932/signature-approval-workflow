@@ -1,0 +1,16 @@
+{
+    "name": "shell",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Host de Module Federation: layout y ruteo del flujo de aprobaciones",
+    "scripts": {
+        "start": "webpack serve --mode development",
+        "build": "webpack build --mode production",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "react-router-dom": "7.18.2"
+    }
+}
