@@ -29,8 +29,7 @@ const serverlessConfiguration: AWS = {
             PURCHASE_REQUESTS_TABLE: purchaseRequestsTable,
             MOCK_MAIL_TABLE: mockMailTable,
             EVIDENCE_BUCKET: evidenceBucket,
-            FRONTEND_BASE_URL:
-                '${env:FRONTEND_BASE_URL, "https://dominio.com"}',
+            FRONTEND_BASE_URL: '${env:FRONTEND_BASE_URL}',
         },
         iam: {
             role: {
