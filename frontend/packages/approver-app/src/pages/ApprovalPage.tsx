@@ -7,8 +7,11 @@ import {
     formatDate,
     getApprovalSummary,
     getErrorMessage,
+    getEvidencePdfUrl,
     REQUEST_STATUS_BADGE_CLASS,
     REQUEST_STATUS_LABEL,
+    rejectApproval,
+    signApproval,
     verifyApprovalOtp,
 } from '@app/shared';
 import type {
@@ -32,6 +35,8 @@ export function ApprovalPage() {
     const [otpError, setOtpError] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
     const [detail, setDetail] = useState<ApprovalView | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [acting, setActing] = useState(false);
 
     useEffect(() => {
         if (!requestId || !token) {
@@ -80,6 +85,42 @@ export function ApprovalPage() {
         }
     }
 
+    async function handleSign() {
+        if (!requestId || !token) {
+            return;
+        }
+        setActionError(null);
+        setActing(true);
+        try {
+            const updated = await signApproval(requestId, token, code);
+            setDetail((prev) =>
+                prev ? { ...updated, approvalId: prev.approvalId } : prev,
+            );
+        } catch (err) {
+            setActionError(getErrorMessage(err));
+        } finally {
+            setActing(false);
+        }
+    }
+
+    async function handleReject() {
+        if (!requestId || !token) {
+            return;
+        }
+        setActionError(null);
+        setActing(true);
+        try {
+            const updated = await rejectApproval(requestId, token, code);
+            setDetail((prev) =>
+                prev ? { ...updated, approvalId: prev.approvalId } : prev,
+            );
+        } catch (err) {
+            setActionError(getErrorMessage(err));
+        } finally {
+            setActing(false);
+        }
+    }
+
     if (!requestId || !token) {
         return (
             <div className="card">
@@ -91,6 +132,12 @@ export function ApprovalPage() {
     }
 
     if (detail) {
+        const myApproval = detail.approvals.find(
+            (approval) => approval.id === detail.approvalId,
+        );
+        const canAct =
+            detail.status === 'PENDING' && myApproval?.status === 'PENDING';
+
         return (
             <div className="card">
                 <h2>{detail.title}</h2>
@@ -153,6 +200,60 @@ export function ApprovalPage() {
                         })}
                     </tbody>
                 </table>
+
+                {actionError && (
+                    <p role="alert" className="form-error">
+                        {actionError}
+                    </p>
+                )}
+
+                {canAct && (
+                    <div className="button-row">
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            disabled={acting}
+                            onClick={() => void handleSign()}
+                        >
+                            {acting ? 'Procesando...' : 'Aprobar'}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-danger"
+                            disabled={acting}
+                            onClick={() => void handleReject()}
+                        >
+                            {acting ? 'Procesando...' : 'Rechazar'}
+                        </button>
+                    </div>
+                )}
+
+                {!canAct && myApproval?.status === 'SIGNED' && (
+                    <p className="text-muted">Ya aprobaste esta solicitud.</p>
+                )}
+                {!canAct && myApproval?.status === 'REJECTED' && (
+                    <p className="text-muted">Ya rechazaste esta solicitud.</p>
+                )}
+                {!canAct &&
+                    myApproval?.status === 'PENDING' &&
+                    detail.status !== 'PENDING' && (
+                        <p className="text-muted">
+                            Esta solicitud ya fue cerrada por otro aprobador.
+                        </p>
+                    )}
+
+                {detail.evidenceAvailable && (
+                    <div className="button-row">
+                        <a
+                            href={getEvidencePdfUrl(detail.id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn btn-primary"
+                        >
+                            Descargar PDF
+                        </a>
+                    </div>
+                )}
             </div>
         );
     }

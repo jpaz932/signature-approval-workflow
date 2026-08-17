@@ -5,17 +5,30 @@ jest.mock('@app/shared', () => {
         ...actual,
         getApprovalSummary: jest.fn(),
         verifyApprovalOtp: jest.fn(),
+        signApproval: jest.fn(),
+        rejectApproval: jest.fn(),
     };
 });
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { getApprovalSummary, verifyApprovalOtp } from '@app/shared';
-import type { ApprovalSummary, ApprovalView } from '@app/shared';
+import {
+    getApprovalSummary,
+    rejectApproval,
+    signApproval,
+    verifyApprovalOtp,
+} from '@app/shared';
+import type {
+    ApprovalSummary,
+    ApprovalView,
+    PurchaseRequest,
+} from '@app/shared';
 import { ApprovalPage } from '../../src/pages/ApprovalPage';
 
 const mockGetApprovalSummary = getApprovalSummary as jest.Mock;
 const mockVerifyApprovalOtp = verifyApprovalOtp as jest.Mock;
+const mockSignApproval = signApproval as jest.Mock;
+const mockRejectApproval = rejectApproval as jest.Mock;
 
 const pendingSummary: ApprovalSummary = {
     requestId: 'req-1',
@@ -74,10 +87,25 @@ function renderPage(query = 'solicitud_id=req-1&approver_token=tok-1') {
     );
 }
 
+async function reachVerifiedDetail(detail: ApprovalView = verifiedDetail) {
+    mockGetApprovalSummary.mockResolvedValueOnce(pendingSummary);
+    mockVerifyApprovalOtp.mockResolvedValueOnce(detail);
+
+    renderPage();
+    fireEvent.change(await screen.findByLabelText('Código de verificación'), {
+        target: { value: '123456' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Verificar código' }));
+
+    await screen.findByText(detail.description);
+}
+
 describe('ApprovalPage', () => {
     beforeEach(() => {
         mockGetApprovalSummary.mockReset();
         mockVerifyApprovalOtp.mockReset();
+        mockSignApproval.mockReset();
+        mockRejectApproval.mockReset();
     });
 
     it('shows an error when the link is missing solicitud_id or approver_token', () => {
@@ -173,5 +201,136 @@ describe('ApprovalPage', () => {
         expect(await screen.findByRole('alert')).toHaveTextContent(
             'Invalid or expired OTP',
         );
+    });
+
+    it('shows Aprobar/Rechazar buttons for my own pending approval', async () => {
+        await reachVerifiedDetail();
+
+        expect(
+            screen.getByRole('button', { name: 'Aprobar' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Rechazar' }),
+        ).toBeInTheDocument();
+    });
+
+    it('signs the approval and updates the view, hiding the action buttons', async () => {
+        await reachVerifiedDetail();
+        const signedRequest: PurchaseRequest = {
+            ...verifiedDetail,
+            approvals: [
+                {
+                    ...verifiedDetail.approvals[0],
+                    status: 'SIGNED',
+                    signedAt: '2026-08-17T13:00:00.000Z',
+                },
+                verifiedDetail.approvals[1],
+                verifiedDetail.approvals[2],
+            ],
+        };
+        mockSignApproval.mockResolvedValueOnce(signedRequest);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }));
+
+        expect(
+            await screen.findByText('Ya aprobaste esta solicitud.'),
+        ).toBeInTheDocument();
+        expect(mockSignApproval).toHaveBeenCalledWith(
+            'req-1',
+            'tok-1',
+            '123456',
+        );
+        expect(
+            screen.queryByRole('button', { name: 'Aprobar' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('rejects the approval and updates the view', async () => {
+        await reachVerifiedDetail();
+        const rejectedRequest: PurchaseRequest = {
+            ...verifiedDetail,
+            status: 'REJECTED',
+            approvals: [
+                {
+                    ...verifiedDetail.approvals[0],
+                    status: 'REJECTED',
+                    rejectedAt: '2026-08-17T13:00:00.000Z',
+                },
+                verifiedDetail.approvals[1],
+                verifiedDetail.approvals[2],
+            ],
+        };
+        mockRejectApproval.mockResolvedValueOnce(rejectedRequest);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Rechazar' }));
+
+        expect(
+            await screen.findByText('Ya rechazaste esta solicitud.'),
+        ).toBeInTheDocument();
+        expect(mockRejectApproval).toHaveBeenCalledWith(
+            'req-1',
+            'tok-1',
+            '123456',
+        );
+    });
+
+    it('shows the backend error message when signing fails, keeping the buttons visible', async () => {
+        await reachVerifiedDetail();
+        mockSignApproval.mockRejectedValueOnce(
+            new Error('Only pending approvals can be signed or rejected'),
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }));
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Only pending approvals can be signed or rejected',
+        );
+        expect(
+            screen.getByRole('button', { name: 'Aprobar' }),
+        ).toBeInTheDocument();
+    });
+
+    it('shows the download link once signing completes the request', async () => {
+        await reachVerifiedDetail();
+        const completedRequest: PurchaseRequest = {
+            ...verifiedDetail,
+            status: 'COMPLETED',
+            evidenceAvailable: true,
+            approvals: [
+                {
+                    ...verifiedDetail.approvals[0],
+                    status: 'SIGNED',
+                    signedAt: '2026-08-17T13:00:00.000Z',
+                },
+                verifiedDetail.approvals[1],
+                verifiedDetail.approvals[2],
+            ],
+        };
+        mockSignApproval.mockResolvedValueOnce(completedRequest);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }));
+
+        expect(
+            await screen.findByRole('link', { name: 'Descargar PDF' }),
+        ).toHaveAttribute(
+            'href',
+            expect.stringContaining('/api/solicitudes/req-1/evidencia.pdf'),
+        );
+    });
+
+    it('does not show action buttons when the request was already closed by another approver', async () => {
+        await reachVerifiedDetail({ ...verifiedDetail, status: 'REJECTED' });
+
+        expect(
+            screen.getByText(
+                'Esta solicitud ya fue cerrada por otro aprobador.',
+            ),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Aprobar' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Rechazar' }),
+        ).not.toBeInTheDocument();
     });
 });

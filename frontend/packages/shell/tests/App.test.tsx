@@ -27,12 +27,12 @@ describe('App', () => {
         ).toHaveAttribute('href', '/solicitudes/nueva');
     });
 
-    it('renders a footer link to the mock-mail viewer, marked as test-only', () => {
+    it('renders a footer link to the mock-mail viewer', () => {
         render(<App />);
 
         expect(
             screen.getByRole('link', {
-                name: 'Correos simulados (solo para pruebas)',
+                name: 'Ver bandeja de entrada (mock-mail)',
             }),
         ).toHaveAttribute('href', '/correos');
     });
