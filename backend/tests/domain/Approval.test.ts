@@ -185,4 +185,82 @@ describe('Approval', () => {
             });
         });
     });
+
+    describe('hasExceededOtpAttempts', () => {
+        it('should report false before any failed attempt', () => {
+            const approval = createApproval();
+
+            expect(approval.hasExceededOtpAttempts()).toBe(false);
+        });
+
+        it('should report false while under the attempt limit', () => {
+            const approval = createApproval();
+
+            try {
+                approval.validateOtp('wrong-1');
+            } catch {
+                /* expected */
+            }
+
+            expect(approval.hasExceededOtpAttempts()).toBe(false);
+        });
+
+        it('should report true once the attempt limit is reached', () => {
+            const approval = createApproval();
+
+            for (let i = 0; i < 3; i += 1) {
+                try {
+                    approval.validateOtp('wrong-code');
+                } catch {
+                    /* expected */
+                }
+            }
+
+            expect(approval.hasExceededOtpAttempts()).toBe(true);
+        });
+
+        it('should not count successful validations as failed attempts', () => {
+            const expiresAt = new Date(Date.now() + 60_000);
+            const otp = Otp.rehydrate('123456', expiresAt);
+            const approval = new Approval(
+                'approval-1',
+                'request-1',
+                'token-1',
+                'approver@example.com',
+                'MANAGER',
+                'Juan Pérez',
+                otp,
+            );
+
+            approval.validateOtp('123456');
+            approval.validateOtp('123456');
+
+            expect(approval.hasExceededOtpAttempts()).toBe(false);
+        });
+    });
+
+    describe('hasOtpExpired', () => {
+        it('should report false right after creation', () => {
+            const approval = createApproval();
+
+            expect(approval.hasOtpExpired()).toBe(false);
+        });
+
+        it('should report true once the OTP window has passed', async () => {
+            const otp = Otp.generate(1 / 60);
+            const approval = new Approval(
+                'approval-1',
+                'request-1',
+                'token-1',
+                'approver@example.com',
+                'MANAGER',
+                'Juan Pérez',
+                otp,
+            );
+
+            await new Promise((resolve) => setTimeout(resolve, 1100));
+
+            expect(approval.hasOtpExpired()).toBe(true);
+        });
+    });
 });

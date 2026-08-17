@@ -38,6 +38,7 @@ export function toPurchaseRequestItem(
                 rejectedAt: status.rejectedAt
                     ? status.rejectedAt.toISOString()
                     : null,
+                failedOtpAttempts: approval.getFailedOtpAttempts(),
             };
         }),
     };
@@ -65,6 +66,7 @@ export function fromPurchaseRequestItem(
                 approval.status,
                 approval.signedAt ? new Date(approval.signedAt) : null,
                 approval.rejectedAt ? new Date(approval.rejectedAt) : null,
+                approval.failedOtpAttempts,
             ),
     );
 

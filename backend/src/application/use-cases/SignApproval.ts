@@ -1,3 +1,4 @@
+import { ApprovalStatus } from '../../domain/entities/types/approval';
 import { PurchaseRequestRepository } from '../ports/PurchaseRequestRepository';
 import { GeneratePurchaseEvidenceUseCase } from './GeneratePurchaseEvidence';
 import { SignApprovalInput } from './inputs/SignApprovalInput';
@@ -9,10 +10,10 @@ export class SignApprovalUseCase {
     ) {}
 
     /**
-     * Validates the approver's OTP and records their signature on the matching approval.
-     * If this was the last of the three required signatures, generates the evidence PDF.
-     * @throws {Error} If the request/token is invalid, the OTP is incorrect or expired, or
-     * the approval/request is not in a state that can be signed.
+     * Signs a purchase request approval based on the provided input.
+     * Validates the OTP code and handles automatic rejection if the OTP has expired or if there are too many failed attempts.
+     * @param input - An object containing the requestId, token, and OTP code for the approval.
+     * @returns An object containing the purchase request and the corresponding approval.
      */
     async execute(input: SignApprovalInput) {
         const request = await this.repository.findById(input.requestId);
@@ -29,7 +30,33 @@ export class SignApprovalUseCase {
             throw new Error('Invalid approval token');
         }
 
-        approval.validateOtp(input.code);
+        if (
+            approval.getStatus().status === ApprovalStatus.PENDING &&
+            approval.hasOtpExpired()
+        ) {
+            request.rejectApproval(approval.id);
+            await this.repository.save(request);
+            throw new Error(
+                'OTP expired: the request was automatically rejected',
+            );
+        }
+
+        try {
+            approval.validateOtp(input.code);
+        } catch (error) {
+            if (approval.hasExceededOtpAttempts()) {
+                request.rejectApproval(approval.id);
+                await this.repository.save(request);
+                throw new Error(
+                    'Too many failed OTP attempts: the request was automatically rejected',
+                    { cause: error },
+                );
+            }
+
+            await this.repository.save(request);
+            throw error;
+        }
+
         request.signApproval(approval.id);
 
         await this.repository.save(request);

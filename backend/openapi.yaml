@@ -25,6 +25,15 @@ info:
        disponible el PDF de evidencia.
     7. `GET /api/solicitudes/{id}/evidencia.pdf` — descarga el PDF (respuesta binaria).
 
+    ## Rechazo automático por seguridad
+
+    Cada aprobación admite máximo 3 intentos fallidos de OTP. Si se superan, o si la
+    ventana de 3 minutos pasa sin que nadie use el código, la solicitud completa pasa a
+    `REJECTED` automáticamente y no admite más acciones — hay que crear una nueva. El
+    vencimiento por tiempo se detecta la próxima vez que se accede a esa aprobación
+    (`GET` del link, o cualquiera de los tres endpoints `POST`), no con un proceso en
+    segundo plano.
+
 servers:
   - url: https://qb8tt59p11.execute-api.us-east-1.amazonaws.com
     description: Desplegado (stage dev, us-east-1)
@@ -170,7 +179,9 @@ paths:
         ni valida el OTP, y por eso **no** expone monto/descripción — solo lo
         necesario para renderizar la pantalla de "ingresa tu código" (nombre/rol del
         aprobador y título de la solicitud). El detalle completo se obtiene recién en
-        `POST .../verify-otp`.
+        `POST .../verify-otp`. Si el OTP ya venció sin que nadie lo usara, este mismo
+        llamado rechaza la solicitud automáticamente (por seguridad) y `status` va a
+        venir como `REJECTED` en la respuesta — no lanza error, es información normal.
       parameters:
         - $ref: "#/components/parameters/RequestId"
         - $ref: "#/components/parameters/ApproverToken"
@@ -216,7 +227,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApprovalView"
         "400":
-          description: OTP incorrecto o expirado.
+          description: >
+            OTP incorrecto (mensaje "Invalid or expired OTP"), o alguno de los dos
+            disparadores de rechazo automático por seguridad: OTP vencido sin uso
+            (mensaje "OTP expired: the request was automatically rejected") o se
+            superaron los 3 intentos fallidos (mensaje "Too many failed OTP attempts:
+            the request was automatically rejected") — en ambos casos la solicitud ya
+            quedó `REJECTED`.
           content:
             application/json:
               schema:
@@ -248,8 +265,13 @@ paths:
                 $ref: "#/components/schemas/PurchaseRequest"
         "400":
           description: >
-            OTP incorrecto o expirado, token inválido, o la aprobación/solicitud ya
-            no admite cambios.
+            OTP incorrecto (mensaje "Invalid or expired OTP"); la aprobación/solicitud
+            ya no admite cambios (mensaje "Only pending approvals can be signed or
+            rejected" u "Only pending purchase requests can be modified"); o alguno de
+            los dos disparadores de rechazo automático por seguridad: OTP vencido sin
+            uso ("OTP expired: the request was automatically rejected") o se superaron
+            los 3 intentos fallidos ("Too many failed OTP attempts: the request was
+            automatically rejected") — en ambos casos la solicitud ya quedó `REJECTED`.
           content:
             application/json:
               schema:
@@ -279,8 +301,13 @@ paths:
                 $ref: "#/components/schemas/PurchaseRequest"
         "400":
           description: >
-            OTP incorrecto o expirado, token inválido, o la aprobación/solicitud ya
-            no admite cambios.
+            OTP incorrecto (mensaje "Invalid or expired OTP"); la aprobación/solicitud
+            ya no admite cambios (mensaje "Only pending approvals can be signed or
+            rejected" u "Only pending purchase requests can be modified"); o alguno de
+            los dos disparadores de rechazo automático por seguridad: OTP vencido sin
+            uso ("OTP expired: the request was automatically rejected") o se superaron
+            los 3 intentos fallidos ("Too many failed OTP attempts: the request was
+            automatically rejected") — en ambos casos la solicitud ya quedó `REJECTED`.
           content:
             application/json:
               schema:

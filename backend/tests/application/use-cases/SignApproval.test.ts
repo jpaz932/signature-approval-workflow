@@ -297,6 +297,88 @@ describe('SignApprovalUseCase', () => {
             );
         });
 
+        it('should automatically reject the request once OTP attempts are exhausted', async () => {
+            const { request } = createRequestWithKnownOtps();
+            repository.add(request);
+
+            for (let i = 0; i < 2; i += 1) {
+                await expect(
+                    useCase.execute({
+                        requestId: 'request-1',
+                        token: 'token-1',
+                        code: 'wrong-code',
+                    }),
+                ).rejects.toThrow('Invalid or expired OTP');
+            }
+
+            const persistedAfterTwo = await repository.findById('request-1');
+            expect(persistedAfterTwo?.getStatus()).toBe(
+                PurchaseRequestStatus.PENDING,
+            );
+
+            await expect(
+                useCase.execute({
+                    requestId: 'request-1',
+                    token: 'token-1',
+                    code: 'wrong-code',
+                }),
+            ).rejects.toThrow(
+                'Too many failed OTP attempts: the request was automatically rejected',
+            );
+
+            const persistedAfterThree = await repository.findById('request-1');
+            expect(persistedAfterThree?.getStatus()).toBe(
+                PurchaseRequestStatus.REJECTED,
+            );
+            expect(
+                persistedAfterThree?.getApproval('approval-1').getStatus()
+                    .status,
+            ).toBe('REJECTED');
+        });
+
+        it('should automatically reject the request when the OTP window already passed', async () => {
+            const otp = Otp.generate(1 / 60);
+            const request = new PurchaseRequest(
+                'request-1',
+                'Compra de equipos',
+                'Compra de tres monitores',
+                1500000,
+                { name: 'Juan Pérez', email: 'juan@example.com' },
+                new Date(),
+                [
+                    createApproval('approval-1', 'MANAGER', 'token-1', otp),
+                    createApproval(
+                        'approval-2',
+                        'FINANCE',
+                        'token-2',
+                        Otp.generate(),
+                    ),
+                    createApproval(
+                        'approval-3',
+                        'DIRECTOR',
+                        'token-3',
+                        Otp.generate(),
+                    ),
+                ],
+            );
+            repository.add(request);
+
+            await new Promise((resolve) => setTimeout(resolve, 1100));
+
+            await expect(
+                useCase.execute({
+                    requestId: 'request-1',
+                    token: 'token-1',
+                    code: '000000',
+                }),
+            ).rejects.toThrow(
+                'OTP expired: the request was automatically rejected',
+            );
+
+            const persisted = await repository.findById('request-1');
+            expect(persisted?.getStatus()).toBe(PurchaseRequestStatus.REJECTED);
+        });
+
         it('should throw when the approval was already signed', async () => {
             const { request, codes } = createRequestWithKnownOtps();
             repository.add(request);

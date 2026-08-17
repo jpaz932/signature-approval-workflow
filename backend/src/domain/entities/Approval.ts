@@ -2,6 +2,9 @@ import { ApprovalStatus } from './types/approval';
 import { Otp } from '../value-objects/Otp';
 
 export class Approval {
+    /** Max wrong OTP guesses allowed before the approval (and request) auto-reject. */
+    private static readonly MAX_OTP_ATTEMPTS = 3;
+
     constructor(
         public readonly id: string,
         public readonly requestId: string,
@@ -13,6 +16,7 @@ export class Approval {
         private status: ApprovalStatus = ApprovalStatus.PENDING,
         private signedAt: Date | null = null,
         private rejectedAt: Date | null = null,
+        private failedOtpAttempts = 0,
     ) {}
 
     /**
@@ -67,14 +71,35 @@ export class Approval {
     }
 
     /**
-     * Validates the provided OTP code against the stored OTP for this approval.
+     * Validates the provided OTP code against the stored OTP for this approval. Every
+     * wrong guess is counted; once the count reaches the limit, callers should reject
+     * the request instead of allowing further attempts (see `hasExceededOtpAttempts`).
      * @param code The OTP code to validate.
      * @throws {Error} If the OTP is invalid or has expired.
      */
     public validateOtp(code: string) {
-        if (!this.otp.isValid(code)) {
-            throw new Error('Invalid or expired OTP');
+        if (this.otp.isValid(code)) {
+            return;
         }
+        this.failedOtpAttempts += 1;
+        throw new Error('Invalid or expired OTP');
+    }
+
+    /**
+     * Checks whether the number of failed OTP attempts has reached the allowed limit.
+     * @returns True if no further OTP attempts should be allowed.
+     */
+    public hasExceededOtpAttempts(): boolean {
+        return this.failedOtpAttempts >= Approval.MAX_OTP_ATTEMPTS;
+    }
+
+    /**
+     * Checks whether the current OTP's validity window has passed, regardless of
+     * whether it was ever used.
+     * @returns True if the OTP has expired.
+     */
+    public hasOtpExpired(): boolean {
+        return new Date() >= this.otp.getExpiresAt();
     }
 
     /**
@@ -86,5 +111,13 @@ export class Approval {
             code: this.otp.getCode(),
             expiresAt: this.otp.getExpiresAt(),
         };
+    }
+
+    /**
+     * Gets the number of failed OTP attempts recorded so far, for persistence.
+     * @returns The number of failed OTP attempts.
+     */
+    public getFailedOtpAttempts(): number {
+        return this.failedOtpAttempts;
     }
 }

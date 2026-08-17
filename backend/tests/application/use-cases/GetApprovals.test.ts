@@ -141,5 +141,71 @@ describe('GetApprovalUseCase', () => {
             expect(result.approval.token).toBe('token-3');
             expect(result.approval.role).toBe('Director');
         });
+
+        it('should automatically reject the request when the OTP window passed without action', async () => {
+            const requestId = 'request-1';
+            const approvals = [
+                new Approval(
+                    'approval-1',
+                    requestId,
+                    'token-1',
+                    'manager@example.com',
+                    'MANAGER',
+                    'Manager',
+                    Otp.generate(1 / 60),
+                ),
+                new Approval(
+                    'approval-2',
+                    requestId,
+                    'token-2',
+                    'finance@example.com',
+                    'FINANCE',
+                    'Finance',
+                    Otp.generate(),
+                ),
+                new Approval(
+                    'approval-3',
+                    requestId,
+                    'token-3',
+                    'director@example.com',
+                    'DIRECTOR',
+                    'Director',
+                    Otp.generate(),
+                ),
+            ];
+            const request = new PurchaseRequest(
+                requestId,
+                'Compra de equipos',
+                'Compra de tres monitores',
+                1500000,
+                { name: 'Juan Pérez', email: 'juan@example.com' },
+                new Date(),
+                approvals,
+            );
+            repository.add(request);
+
+            await new Promise((resolve) => setTimeout(resolve, 1100));
+
+            const result = await useCase.execute({
+                requestId,
+                token: 'token-1',
+            });
+
+            expect(result.approval.getStatus().status).toBe('REJECTED');
+            expect(result.request.getStatus()).toBe('REJECTED');
+        });
+
+        it('should not touch an approval whose OTP is still valid', async () => {
+            const request = createRequest();
+            repository.add(request);
+
+            const result = await useCase.execute({
+                requestId: 'request-1',
+                token: 'token-1',
+            });
+
+            expect(result.approval.getStatus().status).toBe('PENDING');
+            expect(result.request.getStatus()).toBe('PENDING');
+        });
     });
 });

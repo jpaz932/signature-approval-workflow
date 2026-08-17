@@ -74,6 +74,20 @@ El dominio no conoce nada de HTTP, AWS ni DynamoDB.
   `.../reject`) vuelven a pedir y validar el mismo código, en vez de confiar en que ya se
   verificó antes: es la acción que compromete legalmente, así que se protege de forma
   independiente, sin necesitar manejar sesión en un backend sin estado.
+- **Por seguridad, la solicitud se rechaza automáticamente si el OTP vence sin uso, o si
+  se agotan los intentos.** Cada aprobación admite máximo 3 intentos fallidos de OTP
+  (`Approval.hasExceededOtpAttempts`); al superarlos, o si la ventana de 3 minutos pasó
+  sin que nadie la usara (`Approval.hasOtpExpired`), la solicitud completa pasa a
+  `REJECTED` — no queda una forma de reintentar, hay que crear una nueva. Esto cierra dos
+  problemas a la vez: (1) sin límite de intentos, el OTP de 6 dígitos (1 millón de
+  combinaciones) es forzable por fuerza bruta dentro de la ventana de 3 minutos si nadie
+  frena los reintentos; (2) sin una salida ante el vencimiento, una solicitud podía quedar
+  trabada para siempre si un aprobador simplemente no abría el link a tiempo (ninguna de
+  las dos situaciones está cubierta por el enunciado, pero dejarlas sin resolver es peor
+  que la alternativa). El chequeo de vencimiento se hace de forma perezosa (al abrir el
+  link, o al intentar firmar/rechazar/verificar) en vez de con un proceso en segundo plano
+  — no hace falta infraestructura adicional (cron, Step Functions) para algo que ya se
+  evalúa en cada acceso.
 - **El estado "Completada" depende de la evidencia, no solo de las firmas.** Firmar las 3
   aprobaciones dispara la generación del PDF en la misma operación, pero el dominio no
   marca la solicitud como completada hasta que el PDF efectivamente se generó y se guardó

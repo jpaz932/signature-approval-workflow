@@ -16,6 +16,7 @@ interface ApprovalRecord {
     status: ApprovalStatus;
     signedAt: string | null;
     rejectedAt: string | null;
+    failedOtpAttempts: number;
 }
 
 export interface PurchaseRequestRecord {
