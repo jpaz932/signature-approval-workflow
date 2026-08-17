@@ -34,14 +34,15 @@ export class SignApprovalUseCase {
 
         await this.repository.save(request);
 
-        if (request.allApprovalsSigned()) {
-            await this.generatePurchaseEvidence.execute({
-                requestId: request.id,
-            });
-        }
+        // If all approvals are signed, generate the evidence PDF and return the updated request.
+        const finalRequest = request.allApprovalsSigned()
+            ? await this.generatePurchaseEvidence.execute({
+                  requestId: request.id,
+              })
+            : request;
 
         return {
-            request,
+            request: finalRequest,
             approval,
         };
     }

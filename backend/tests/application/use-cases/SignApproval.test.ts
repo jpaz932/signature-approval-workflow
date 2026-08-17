@@ -10,7 +10,18 @@ import { SignApprovalInput } from '../../../src/application/use-cases/inputs/Sig
 import { SignApprovalUseCase } from '../../../src/application/use-cases/SignApproval';
 import { Otp } from '../../../src/domain/value-objects/Otp';
 import { EvidencePdfData } from '../../../src/application/types/pdfGenerator';
+import {
+    fromPurchaseRequestItem,
+    toPurchaseRequestItem,
+} from '../../../src/infraestructure/mappers/purchaseRequestMapper';
 
+/**
+ * Deserializes a fresh PurchaseRequest instance on every read, same as a real repository
+ * (e.g. DynamoDB) would — two `findById` calls never return the same object reference.
+ * This matters because SignApprovalUseCase and GeneratePurchaseEvidenceUseCase each read
+ * their own copy of the aggregate; a fake that shared references across reads would hide
+ * bugs where a use case returns a stale copy instead of the one carrying later mutations.
+ */
 class FakePurchaseRequestRepository implements PurchaseRequestRepository {
     private requests: PurchaseRequest[] = [];
 
@@ -28,11 +39,16 @@ class FakePurchaseRequestRepository implements PurchaseRequestRepository {
     }
 
     async findById(id: string): Promise<PurchaseRequest | null> {
-        return this.requests.find((request) => request.id === id) ?? null;
+        const found = this.requests.find((request) => request.id === id);
+        return found
+            ? fromPurchaseRequestItem(toPurchaseRequestItem(found))
+            : null;
     }
 
     async findAll(): Promise<PurchaseRequest[]> {
-        return this.requests;
+        return this.requests.map((request) =>
+            fromPurchaseRequestItem(toPurchaseRequestItem(request)),
+        );
     }
 }
 
@@ -173,13 +189,16 @@ describe('SignApprovalUseCase', () => {
                 token: 'token-2',
                 code: codes['token-2'],
             });
-            await useCase.execute({
+            const result = await useCase.execute({
                 requestId: 'request-1',
                 token: 'token-3',
                 code: codes['token-3'],
             });
 
-            expect(request.getStatus()).toBe('COMPLETED');
+            // Asserted on the returned value, not the original `request` reference: the
+            // repository hands back a fresh instance on every read (like DynamoDB does),
+            // so the object passed to `repository.add` above is never itself mutated.
+            expect(result.request.getStatus()).toBe('COMPLETED');
         });
 
         it('should not generate evidence when fewer than three approvals are signed', async () => {
@@ -209,7 +228,7 @@ describe('SignApprovalUseCase', () => {
                 token: 'token-2',
                 code: codes['token-2'],
             });
-            await useCase.execute({
+            const result = await useCase.execute({
                 requestId: 'request-1',
                 token: 'token-3',
                 code: codes['token-3'],
@@ -218,6 +237,15 @@ describe('SignApprovalUseCase', () => {
             expect(pdfGenerator.calls).toHaveLength(1);
             expect(evidenceStorage.saved.has('evidence/request-1.pdf')).toBe(
                 true,
+            );
+
+            // The value returned to the caller (e.g. the HTTP handler) must itself carry
+            // the completed status and evidence key, not just what ends up persisted.
+            expect(result.request.getStatus()).toBe(
+                PurchaseRequestStatus.COMPLETED,
+            );
+            expect(result.request.getEvidenceKey()).toBe(
+                'evidence/request-1.pdf',
             );
 
             const persisted = await repository.findById('request-1');
