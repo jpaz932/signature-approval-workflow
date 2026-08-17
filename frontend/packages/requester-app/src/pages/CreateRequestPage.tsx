@@ -13,7 +13,6 @@ import {
 import { REQUIRED_APPROVERS } from './constants';
 
 export function CreateRequestPage() {
-    const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [created, setCreated] = useState<PurchaseRequest | null>(null);
 
@@ -22,7 +21,7 @@ export function CreateRequestPage() {
         handleSubmit,
         control,
         reset,
-        formState: { errors },
+        formState: { errors, isSubmitting },
     } = useForm<FormInput, unknown, FormOutput>({
         resolver: zodResolver(formSchema),
         defaultValues: { approverIds: [] },
@@ -48,7 +47,6 @@ export function CreateRequestPage() {
             };
         }) as [ApproverInput, ApproverInput, ApproverInput];
 
-        setSubmitting(true);
         setSubmitError(null);
         try {
             setCreated(
@@ -65,8 +63,6 @@ export function CreateRequestPage() {
             );
         } catch (err) {
             setSubmitError(getErrorMessage(err));
-        } finally {
-            setSubmitting(false);
         }
     }
 
@@ -249,9 +245,9 @@ export function CreateRequestPage() {
             <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={submitting}
+                disabled={isSubmitting}
             >
-                {submitting ? 'Creando...' : 'Crear solicitud'}
+                {isSubmitting ? 'Creando...' : 'Crear solicitud'}
             </button>
         </form>
     );

@@ -60,6 +60,13 @@ function renderPage() {
     );
 }
 
+// jsdom doesn't implement HTMLFormElement.requestSubmit(), which a native click on a
+// <button type="submit"> now routes through; dispatching the submit event directly on
+// the form sidesteps that and still exercises the same onSubmit handler.
+function submitForm(container: HTMLElement) {
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+}
+
 function fillTextFields() {
     fireEvent.change(screen.getByLabelText('Título'), {
         target: { value: 'Compra de laptops' },
@@ -118,13 +125,11 @@ describe('CreateRequestPage', () => {
     });
 
     it('shows a validation error when fewer than 3 approvers are selected', async () => {
-        renderPage();
+        const { container } = renderPage();
         fillTextFields();
         selectApprovers('Ana Gómez', 'Luis Rojas');
 
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Crear solicitud' }),
-        );
+        submitForm(container);
 
         const alert = await screen.findByRole('alert');
         expect(alert).toHaveTextContent('exactamente 3');
@@ -133,15 +138,13 @@ describe('CreateRequestPage', () => {
     });
 
     it('shows a validation error when the amount is not a positive number', async () => {
-        renderPage();
+        const { container } = renderPage();
         fillValidForm();
         fireEvent.change(screen.getByLabelText('Monto'), {
             target: { value: '0' },
         });
 
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Crear solicitud' }),
-        );
+        submitForm(container);
 
         expect(await screen.findByRole('alert')).toHaveTextContent('mayor a 0');
         expect(mockCreatePurchaseRequest).not.toHaveBeenCalled();
@@ -150,11 +153,9 @@ describe('CreateRequestPage', () => {
     it('submits the form and shows the created request on success', async () => {
         mockCreatePurchaseRequest.mockResolvedValueOnce(sampleCreated);
 
-        renderPage();
+        const { container } = renderPage();
         fillValidForm();
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Crear solicitud' }),
-        );
+        submitForm(container);
 
         expect(await screen.findByText('Solicitud creada')).toBeInTheDocument();
         expect(mockCreatePurchaseRequest).toHaveBeenCalledWith({
@@ -186,11 +187,9 @@ describe('CreateRequestPage', () => {
     it('shows a link back to the requests list and a button to create another one', async () => {
         mockCreatePurchaseRequest.mockResolvedValueOnce(sampleCreated);
 
-        renderPage();
+        const { container } = renderPage();
         fillValidForm();
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Crear solicitud' }),
-        );
+        submitForm(container);
         await screen.findByText('Solicitud creada');
 
         expect(
@@ -211,11 +210,9 @@ describe('CreateRequestPage', () => {
     it('shows the backend error message when the request fails', async () => {
         mockCreatePurchaseRequest.mockRejectedValueOnce(new Error('Boom'));
 
-        renderPage();
+        const { container } = renderPage();
         fillValidForm();
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Crear solicitud' }),
-        );
+        submitForm(container);
 
         expect(await screen.findByRole('alert')).toHaveTextContent('Boom');
     });

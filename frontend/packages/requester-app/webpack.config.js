@@ -50,6 +50,8 @@ module.exports = {
             filename: 'remoteEntry.js',
             exposes: {
                 './CreateRequestPage': './src/pages/CreateRequestPage',
+                './RequestListPage': './src/pages/RequestListPage',
+                './RequestDetailPage': './src/pages/RequestDetailPage',
             },
             shared: {
                 react: { singleton: true, requiredVersion: packageJson.dependencies.react },
