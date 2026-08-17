@@ -1,0 +1,15 @@
+{
+    "name": "@app/shared",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Tipos y cliente API compartidos entre los micro-frontends",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "scripts": {
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "axios": "1.13.1",
+        "zod": "4.4.3"
+    }
+}
