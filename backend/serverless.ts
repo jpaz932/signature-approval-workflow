@@ -8,6 +8,11 @@ const serverlessConfiguration: AWS = {
     service: 'signature-approval-workflow',
     plugins: ['serverless-offline'],
     frameworkVersion: '4',
+    custom: {
+        'serverless-offline': {
+            lambdaPort: 3010,
+        },
+    },
     build: {
         esbuild: {
             external: ['pdfkit'],
@@ -17,6 +22,9 @@ const serverlessConfiguration: AWS = {
         name: 'aws',
         runtime: 'nodejs24.x',
         region: 'us-east-1',
+        httpApi: {
+            cors: true,
+        },
         environment: {
             PURCHASE_REQUESTS_TABLE: purchaseRequestsTable,
             MOCK_MAIL_TABLE: mockMailTable,
