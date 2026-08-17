@@ -16,6 +16,7 @@ const serverlessConfiguration: AWS = {
     provider: {
         name: 'aws',
         runtime: 'nodejs24.x',
+        region: 'us-east-1',
         environment: {
             PURCHASE_REQUESTS_TABLE: purchaseRequestsTable,
             MOCK_MAIL_TABLE: mockMailTable,
