@@ -58,3 +58,12 @@ export interface ApprovalView extends PurchaseRequest {
 export interface ErrorResponse {
     message: string;
 }
+
+export interface MockMailEntry {
+    requestId: string;
+    approvalId: string;
+    email: string;
+    subject: string;
+    body: string;
+    sentAt: string;
+}

@@ -14,7 +14,8 @@
         "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\" \"packages/*/tests/**/*.{ts,tsx}\"",
         "start:shell": "npm run start --workspace=shell",
         "start:requester-app": "npm run start --workspace=requester-app",
-        "dev": "concurrently -n shell,requester-app -c blue,green \"npm:start:shell\" \"npm:start:requester-app\""
+        "start:approver-app": "npm run start --workspace=approver-app",
+        "dev": "concurrently -n shell,requester-app,approver-app -c blue,green,yellow \"npm:start:shell\" \"npm:start:requester-app\" \"npm:start:approver-app\""
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",

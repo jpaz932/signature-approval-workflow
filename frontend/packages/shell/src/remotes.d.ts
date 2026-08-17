@@ -15,3 +15,15 @@ declare module 'requesterApp/RequestDetailPage' {
     const RequestDetailPage: ComponentType;
     export default RequestDetailPage;
 }
+
+declare module 'requesterApp/MockMailPage' {
+    import type { ComponentType } from 'react';
+    const MockMailPage: ComponentType;
+    export default MockMailPage;
+}
+
+declare module 'approverApp/ApprovalPage' {
+    import type { ComponentType } from 'react';
+    const ApprovalPage: ComponentType;
+    export default ApprovalPage;
+}

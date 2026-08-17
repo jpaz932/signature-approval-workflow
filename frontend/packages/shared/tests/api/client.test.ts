@@ -4,6 +4,7 @@ import {
     getEvidencePdfUrl,
     getPurchaseRequest,
     httpClient,
+    listMockMail,
     listPurchaseRequests,
     rejectApproval,
     signApproval,
@@ -142,5 +143,24 @@ describe('api client', () => {
             },
         );
         expect(result).toEqual(samplePurchaseRequest);
+    });
+
+    it('listMockMail gets /mock-mail and returns the list', async () => {
+        const entries = [
+            {
+                requestId: 'req-1',
+                approvalId: 'appr-1',
+                email: 'ana@example.com',
+                subject: 'Solicitud de compra pendiente por aprobar',
+                body: 'Hola Ana, ... https://dominio.com/approve?solicitud_id=req-1&approver_token=tok-1 ... 123456 ...',
+                sentAt: '2026-08-17T10:00:00.000Z',
+            },
+        ];
+        getSpy.mockResolvedValueOnce(entries);
+
+        const result = await listMockMail();
+
+        expect(getSpy).toHaveBeenCalledWith('/mock-mail');
+        expect(result).toEqual(entries);
     });
 });

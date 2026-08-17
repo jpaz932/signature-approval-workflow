@@ -26,4 +26,14 @@ describe('App', () => {
             screen.getByRole('link', { name: 'Nueva solicitud' }),
         ).toHaveAttribute('href', '/solicitudes/nueva');
     });
+
+    it('renders a footer link to the mock-mail viewer, marked as test-only', () => {
+        render(<App />);
+
+        expect(
+            screen.getByRole('link', {
+                name: 'Correos simulados (solo para pruebas)',
+            }),
+        ).toHaveAttribute('href', '/correos');
+    });
 });

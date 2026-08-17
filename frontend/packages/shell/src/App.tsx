@@ -5,6 +5,8 @@ import { Layout } from './components/Layout';
 const RequestListPage = lazy(() => import('requesterApp/RequestListPage'));
 const CreateRequestPage = lazy(() => import('requesterApp/CreateRequestPage'));
 const RequestDetailPage = lazy(() => import('requesterApp/RequestDetailPage'));
+const MockMailPage = lazy(() => import('requesterApp/MockMailPage'));
+const ApprovalPage = lazy(() => import('approverApp/ApprovalPage'));
 
 export function App() {
     return (
@@ -28,6 +30,8 @@ export function App() {
                             path="/solicitudes/:id"
                             element={<RequestDetailPage />}
                         />
+                        <Route path="/correos" element={<MockMailPage />} />
+                        <Route path="/approve" element={<ApprovalPage />} />
                     </Routes>
                 </Suspense>
             </Layout>

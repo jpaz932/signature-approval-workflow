@@ -1,0 +1,17 @@
+{
+    "name": "approver-app",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Remote de Module Federation: vista del Aprobador (acceso por link + OTP)",
+    "scripts": {
+        "start": "webpack serve --mode development",
+        "build": "webpack build --mode production",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@app/shared": "1.0.0",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "react-router-dom": "7.18.2"
+    }
+}

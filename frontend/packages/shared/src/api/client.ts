@@ -5,6 +5,7 @@ import type {
     ApprovalSummary,
     ApprovalView,
     CreatePurchaseRequestInput,
+    MockMailEntry,
     PurchaseRequest,
 } from '../types';
 
@@ -75,4 +76,8 @@ export function rejectApproval(
             code,
         },
     );
+}
+
+export function listMockMail(): Promise<MockMailEntry[]> {
+    return httpClient.get<MockMailEntry[]>('/mock-mail');
 }

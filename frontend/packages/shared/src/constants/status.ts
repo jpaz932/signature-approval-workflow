@@ -1,4 +1,4 @@
-import type { ApprovalStatus, PurchaseRequestStatus } from '@app/shared';
+import type { ApprovalStatus, PurchaseRequestStatus } from '../types';
 
 export const REQUEST_STATUS_LABEL: Record<PurchaseRequestStatus, string> = {
     PENDING: 'Pendiente',

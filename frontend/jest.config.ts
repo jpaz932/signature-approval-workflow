@@ -5,6 +5,7 @@ const config: Config = {
         '<rootDir>/packages/shared',
         '<rootDir>/packages/shell',
         '<rootDir>/packages/requester-app',
+        '<rootDir>/packages/approver-app',
     ],
     collectCoverageFrom: [
         'packages/*/src/**/*.{ts,tsx}',

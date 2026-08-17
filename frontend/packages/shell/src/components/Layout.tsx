@@ -33,6 +33,11 @@ export function Layout({ children }: LayoutProps) {
                 </div>
             </header>
             <main className="container">{children}</main>
+            <footer className="app-footer">
+                <NavLink to="/correos" className="app-footer__link">
+                    Ver bandeja de entrada (mock-mail)
+                </NavLink>
+            </footer>
         </div>
     );
 }

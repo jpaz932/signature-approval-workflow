@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
+    APPROVAL_STATUS_BADGE_CLASS,
+    APPROVAL_STATUS_LABEL,
+    formatAmount,
+    formatDate,
     getErrorMessage,
     getEvidencePdfUrl,
     getPurchaseRequest,
-} from '@app/shared';
-import type { ApprovalDetail, PurchaseRequest } from '@app/shared';
-import {
-    APPROVAL_STATUS_BADGE_CLASS,
-    APPROVAL_STATUS_LABEL,
     REQUEST_STATUS_BADGE_CLASS,
     REQUEST_STATUS_LABEL,
-} from '../constants/status';
-import { formatAmount, formatDate } from '../utils/format';
+} from '@app/shared';
+import type { ApprovalDetail, PurchaseRequest } from '@app/shared';
 
 function approvalTimestamp(approval: ApprovalDetail): string | null {
     return approval.signedAt ?? approval.rejectedAt;

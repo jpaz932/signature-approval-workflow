@@ -35,7 +35,7 @@ module.exports = {
         ],
     },
     devServer: {
-        port: 3002,
+        port: 3003,
         historyApiFallback: true,
         headers: {
             'Access-Control-Allow-Origin': '*',
@@ -46,13 +46,10 @@ module.exports = {
             'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL),
         }),
         new ModuleFederationPlugin({
-            name: 'requesterApp',
+            name: 'approverApp',
             filename: 'remoteEntry.js',
             exposes: {
-                './CreateRequestPage': './src/pages/CreateRequestPage',
-                './RequestListPage': './src/pages/RequestListPage',
-                './RequestDetailPage': './src/pages/RequestDetailPage',
-                './MockMailPage': './src/pages/MockMailPage',
+                './ApprovalPage': './src/pages/ApprovalPage',
             },
             shared: {
                 react: { singleton: true, requiredVersion: packageJson.dependencies.react },
