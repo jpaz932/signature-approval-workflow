@@ -7,7 +7,7 @@
         "packages/*"
     ],
     "scripts": {
-        "typecheck": "npm run typecheck --workspaces --if-present",
+        "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck --workspaces --if-present",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
@@ -15,17 +15,20 @@
         "start:shell": "npm run start --workspace=shell",
         "start:requester-app": "npm run start --workspace=requester-app",
         "start:approver-app": "npm run start --workspace=approver-app",
-        "dev": "concurrently -n shell,requester-app,approver-app -c blue,green,yellow \"npm:start:shell\" \"npm:start:requester-app\" \"npm:start:approver-app\""
+        "dev": "concurrently -n shell,requester-app,approver-app -c blue,green,yellow \"npm:start:shell\" \"npm:start:requester-app\" \"npm:start:approver-app\"",
+        "build": "npm run build --workspaces --if-present",
+        "deploy:site": "node scripts/deploy-site.js"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
-        "concurrently": "10.0.5",
+        "@serverless/typescript": "4.30.0",
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "16.3.0",
         "@types/jest": "30.0.0",
         "@types/node": "26.2.0",
         "@types/react": "19.2.18",
         "@types/react-dom": "19.2.4",
+        "concurrently": "10.0.5",
         "css-loader": "7.1.4",
         "dotenv": "17.4.2",
         "eslint": "10.8.1",
@@ -37,6 +40,7 @@
         "jest": "30.4.2",
         "jest-environment-jsdom": "30.4.1",
         "prettier": "3.9.6",
+        "serverless": "4.41.0",
         "style-loader": "4.0.0",
         "ts-jest": "29.4.12",
         "ts-loader": "9.6.2",

@@ -3,8 +3,15 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { container } = require('webpack');
 const packageJson = require('./package.json');
 
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 const { ModuleFederationPlugin } = container;
 const isProduction = process.env.NODE_ENV === 'production';
+
+const requesterAppRemote =
+    process.env.REQUESTER_APP_REMOTE || 'http://localhost:3002/remoteEntry.js';
+const approverAppRemote =
+    process.env.APPROVER_APP_REMOTE || 'http://localhost:3003/remoteEntry.js';
 
 module.exports = {
     mode: isProduction ? 'production' : 'development',
@@ -40,8 +47,8 @@ module.exports = {
         new ModuleFederationPlugin({
             name: 'shell',
             remotes: {
-                requesterApp: 'requesterApp@http://localhost:3002/remoteEntry.js',
-                approverApp: 'approverApp@http://localhost:3003/remoteEntry.js',
+                requesterApp: `requesterApp@${requesterAppRemote}`,
+                approverApp: `approverApp@${approverAppRemote}`,
             },
             shared: {
                 react: { singleton: true, requiredVersion: packageJson.dependencies.react },
