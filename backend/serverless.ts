@@ -23,7 +23,16 @@ const serverlessConfiguration: AWS = {
         runtime: 'nodejs24.x',
         region: 'us-east-1',
         httpApi: {
-            cors: true,
+            cors: {
+                allowedOrigins: [
+                    '${env:FRONTEND_BASE_URL}',
+                    'http://localhost:3001',
+                    'http://localhost:3002',
+                    'http://localhost:3003',
+                ],
+                allowedHeaders: ['Content-Type'],
+                allowedMethods: ['GET', 'POST'],
+            },
         },
         environment: {
             PURCHASE_REQUESTS_TABLE: purchaseRequestsTable,
